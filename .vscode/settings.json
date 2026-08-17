@@ -14,5 +14,6 @@
     "**/playwright-report": true,
     "**/test-results": true,
     "**/tsconfig.tsbuildinfo": true
-  }
+  },
+  "prisma.pinToPrisma6": true
 }
