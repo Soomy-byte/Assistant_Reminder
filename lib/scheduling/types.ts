@@ -26,9 +26,11 @@ export type ScheduledBlock = TimeRange & {
 
 export type SchedulerInput = {
   range: TimeRange;
+  allowedRanges?: TimeRange[];
   tasks: SchedulerTask[];
   occupied: ScheduledBlock[];
   minimumBreakMinutes: number;
+  maximumFocusMinutes?: number;
 };
 
 export type TaskPlacement = TimeRange & {
@@ -41,7 +43,7 @@ export type UnscheduledTask = {
   taskId: string;
   title: string;
   remainingMinutes: number;
-  reason: "NO_CAPACITY" | "NO_CONTIGUOUS_SLOT" | "INVALID_WINDOW";
+  reason: "NO_CAPACITY" | "NO_CONTIGUOUS_SLOT" | "INVALID_WINDOW" | "EXCEEDS_FOCUS_LIMIT";
 };
 
 export type SchedulerResult = {

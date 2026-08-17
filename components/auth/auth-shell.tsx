@@ -12,10 +12,10 @@ type AuthShellProps = {
 export function AuthShell({ eyebrow, title, description, children, footer }: AuthShellProps) {
   return (
     <main className="auth-page">
-      <section className="auth-story" aria-label="Tentang AI Weekly Assistant">
+      <section className="auth-story" aria-label="Tentang Assistant Reminder">
         <div className="auth-brand">
           <span className="brand-mark"><Sparkles size={20} /></span>
-          <span><strong>Weekly</strong><small>AI Assistant</small></span>
+          <span><strong>Assistant</strong><small>Reminder</small></span>
         </div>
         <div className="auth-story-copy">
           <p className="eyebrow">Rencana yang realistis</p>

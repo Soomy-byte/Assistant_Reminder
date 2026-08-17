@@ -1,140 +1,89 @@
-# Menjalankan AI Weekly Assistant di Windows dan Visual Studio Code
+# Setup Windows dan VS Code
 
-Panduan ini menggunakan Docker Desktop untuk PostgreSQL dan Redis agar instalasi lebih konsisten.
+## 1. Prasyarat
 
-## 1. Instal aplikasi pendukung
-
-Instal:
-
-- Visual Studio Code.
-- Node.js versi 22 LTS atau lebih baru.
-- Git for Windows.
-- Docker Desktop dengan WSL 2.
-
-Setelah selesai, restart Windows bila diminta.
-
-## 2. Buka proyek
-
-1. Ekstrak ZIP proyek.
-2. Buka Visual Studio Code.
-3. Pilih **File → Open Folder**.
-4. Pilih folder `ai-weekly-assistant`.
-5. Buka terminal melalui **Terminal → New Terminal**.
-
-## 3. Instal dependensi
-
-Jalankan:
+Instal Node.js 22 LTS, VS Code, Git, dan Docker Desktop. Jalankan terminal dari folder yang berisi `package.json`, bukan `C:\Windows\System32`.
 
 ```powershell
-npm install
+node --version
+npm.cmd --version
+docker compose version
 ```
 
-## 4. Siapkan environment
-
-Salin `.env.example` menjadi `.env`:
+## 2. Instalasi
 
 ```powershell
+npm.cmd install
 Copy-Item .env.example .env
 ```
 
-Untuk konfigurasi Docker bawaan, ubah `DATABASE_URL` dalam `.env` menjadi:
+Gunakan `npm.cmd` bila PowerShell memblokir `npm.ps1`.
+
+Isi `.env`:
 
 ```env
 DATABASE_URL="postgresql://weekly_user:weekly_password@localhost:5432/weekly_assistant?schema=public"
+SESSION_SECRET="nilai-acak-minimal-32-karakter"
+APP_ORIGIN="http://localhost:3000"
+TRUST_PROXY="false"
+AI_PROVIDER="mock"
+REDIS_URL="redis://localhost:6379"
+WEB_PUSH_PUBLIC_KEY=""
+WEB_PUSH_PRIVATE_KEY=""
+WEB_PUSH_SUBJECT="mailto:email-kamu@example.com"
 ```
 
-Buat nilai acak yang panjang untuk `SESSION_SECRET`. Di PowerShell:
+## 3. Database
 
 ```powershell
-$bytes = New-Object byte[] 48
-[Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
-[Convert]::ToBase64String($bytes)
-```
-
-Salin hasilnya ke `SESSION_SECRET` di `.env`. Jangan mengunggah `.env` ke repository.
-
-## 5. Jalankan PostgreSQL dan Redis
-
-Pastikan Docker Desktop aktif, lalu jalankan:
-
-```powershell
-docker compose up -d
-```
-
-Periksa status:
-
-```powershell
+docker compose up -d postgres redis
 docker compose ps
+npm.cmd run db:prisma:generate
+npm.cmd run db:migrate
 ```
 
-Kedua layanan harus berstatus healthy atau running.
+Migration `0003_planner_mvp` meningkatkan database v0.2 tanpa menghapus akun lama.
 
-## 6. Terapkan struktur database
-
-Jalankan:
+## 4. Pemeriksaan dan menjalankan
 
 ```powershell
-npm run db:prisma:generate
-npm run db:migrate
+npm.cmd run test:unit
+npm.cmd run typecheck
+npm.cmd run lint:local
+npm.cmd run build
+npm.cmd run dev
 ```
 
-Migration mencakup constraint PostgreSQL untuk mencegah blok jadwal aktif bertabrakan.
+Buka `http://localhost:3000`.
 
-## 7. Jalankan aplikasi
+## 5. Uji manual
+
+1. Registrasi dan onboarding.
+2. Buat target bulanan.
+3. Buat rutinitas tetap.
+4. Buat beberapa tugas fleksibel.
+5. Buka Minggu dan buat proposal.
+6. Periksa lalu konfirmasi.
+7. Tandai tugas selesai.
+8. Uji susun ulang dan Undo.
+9. Buka Minggu, seret tugas ke hari lain, lalu ubah jam dan reminder lewat dialog.
+10. Coba pindahkan tugas ke waktu rutinitas untuk melihat penolakan konflik.
+11. Uji Brain Dump serta pengingat browser.
+
+## 6. Notifikasi handphone/Web Push
+
+Buat pasangan kunci satu kali:
 
 ```powershell
-npm run dev:local
+npm.cmd run notifications:keys
 ```
 
-Buka alamat yang ditampilkan terminal. Umumnya aplikasi tersedia pada:
-
-```text
-http://localhost:3000
-```
-
-Jika terminal menampilkan port berbeda, gunakan alamat dari terminal.
-
-## 8. Buat akun pertama
-
-1. Buka `http://localhost:3000/register`.
-2. Daftarkan nama, email, dan kata sandi yang memenuhi aturan.
-3. Lengkapi zona waktu, hari aktif, jam tidur, dan batas fokus.
-4. Setelah onboarding tersimpan, dashboard akan terbuka.
-
-Alur **Lupa kata sandi** siap untuk development. Karena layanan email belum dipilih, tautan reset lokal muncul di halaman setelah email dikirim. Pada mode production, token tersebut tidak dikembalikan lewat API dan harus dikirim melalui adapter email.
-
-## 9. Pemeriksaan source
+Salin hasilnya ke `.env`. Setelah itu buka terminal kedua:
 
 ```powershell
-npm run lint:local
-npm run test:unit
-npm run build:local
+npm.cmd run worker:notifications
 ```
 
-## 10. Melihat database
+Klik ikon lonceng di aplikasi untuk mendaftarkan browser. Pengujian di handphone memerlukan deployment HTTPS; alamat IP lokal melalui HTTP tidak memenuhi syarat keamanan Push API.
 
-```powershell
-npm run db:studio
-```
-
-Prisma Studio membuka antarmuka untuk memeriksa tabel dan data secara lokal.
-
-## 11. Menghentikan layanan
-
-Menghentikan container tanpa menghapus data:
-
-```powershell
-docker compose stop
-```
-
-Menjalankan kembali:
-
-```powershell
-docker compose start
-```
-
-Hindari `docker compose down -v` karena opsi `-v` menghapus data PostgreSQL dan Redis lokal.
-
-## Status pengembangan
-
-Fase 1 sudah tersedia: registrasi, login, logout, pemulihan kata sandi lokal, sesi aman, onboarding, dan pengaturan profil. CRUD tugas persisten, koneksi AI, serta Web Push akan ditambahkan pada fase berikutnya.
+Tekan `Ctrl+C` pada kedua terminal untuk menghentikan Next.js dan worker. Gunakan `docker compose stop` untuk menghentikan PostgreSQL serta Redis tanpa menghapus data.

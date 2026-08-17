@@ -37,8 +37,20 @@ yarn-error.log*
 # typescript
 next-env.d.ts
 /dist/
-/.wrangler/
-/.sites-runtime/
 /outputs/
 /work/
 /app/generated/prisma/
+/.runtime-tmp/
+
+# AppDeploy adapter tidak digunakan untuk versi GitHub/Vercel
+/appdeploy-version/
+
+# hasil pengujian Playwright
+/playwright-report/
+/test-results/
+
+# temporary deployment files
+/.sites-runtime/
+
+# TypeScript build cache
+*.tsbuildinfo

@@ -1,0 +1,2 @@
+import type { MetadataRoute } from "next";
+export default function manifest(): MetadataRoute.Manifest { return { name: "Assistant Reminder", short_name: "Reminder", description: "Perencana harian, mingguan, dan bulanan.", start_url: "/", display: "standalone", background_color: "#f4f5f0", theme_color: "#276c53", lang: "id-ID", icons: [{ src: "/favicon.svg", sizes: "any", type: "image/svg+xml" }] }; }

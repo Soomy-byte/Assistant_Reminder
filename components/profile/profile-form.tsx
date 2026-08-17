@@ -118,7 +118,7 @@ export function ProfileForm({ mode }: { mode: "onboarding" | "settings" }) {
       <div className="profile-wrap">
         <header className="profile-header">
           {mode === "settings" && <Link className="back-link" href="/"><ChevronLeft size={17} /> Kembali</Link>}
-          <div className="profile-brand"><Sparkles size={18} /><strong>Weekly</strong></div>
+          <div className="profile-brand"><Sparkles size={18} /><strong>Assistant Reminder</strong></div>
           <p className="eyebrow">{mode === "onboarding" ? "Langkah terakhir" : "Profil dan preferensi"}</p>
           <h1>{mode === "onboarding" ? "Sesuaikan ritme minggumu." : "Atur cara asisten bekerja."}</h1>
           <p>{mode === "onboarding" ? "Jawaban ini menjadi batas aman bagi mesin penjadwalan. Semuanya bisa diubah kembali." : "Perubahan akan dipakai ketika jadwal baru disusun pada fase berikutnya."}</p>

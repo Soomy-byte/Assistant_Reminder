@@ -47,6 +47,9 @@ export const profileSchema = z.object({
 }).refine((value) => value.minimumBreakMinutes < value.maximumFocusMinutes, {
   message: "Durasi jeda harus lebih pendek dari durasi fokus.",
   path: ["minimumBreakMinutes"],
+}).refine((value) => value.sleepStart !== value.sleepEnd, {
+  message: "Jam tidur dan bangun tidak boleh sama.",
+  path: ["sleepEnd"],
 });
 
 export type ProfileInput = z.infer<typeof profileSchema>;

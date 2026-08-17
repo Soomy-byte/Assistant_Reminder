@@ -78,6 +78,15 @@ export function scheduleWeek(input: SchedulerInput): SchedulerResult {
   const placements: TaskPlacement[] = [];
   const unscheduled: SchedulerResult["unscheduled"] = [];
   const occupied = [...input.occupied];
+  const allowedRanges = input.allowedRanges === undefined ? [input.range] : input.allowedRanges;
+  const maximumFocusMinutes = input.maximumFocusMinutes ?? Number.MAX_SAFE_INTEGER;
+
+  function availableSlots(task: SchedulerTask) {
+    return allowedRanges.flatMap((allowed) => findFreeSlots(allowed, occupied)).map((slot) => ({
+      startsAt: task.earliestStartAt && task.earliestStartAt > slot.startsAt ? task.earliestStartAt : slot.startsAt,
+      endsAt: task.deadlineAt && task.deadlineAt < slot.endsAt ? task.deadlineAt : slot.endsAt,
+    })).filter((slot) => slot.endsAt > slot.startsAt).sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
+  }
 
   for (const task of sortTasks(input.tasks)) {
     if (task.durationMinutes <= 0) {
@@ -85,13 +94,18 @@ export function scheduleWeek(input: SchedulerInput): SchedulerResult {
       continue;
     }
 
+    if (task.deadlineAt && task.earliestStartAt && task.deadlineAt <= task.earliestStartAt) {
+      unscheduled.push({ taskId: task.id, title: task.title, remainingMinutes: task.durationMinutes, reason: "INVALID_WINDOW" });
+      continue;
+    }
     let remaining = task.durationMinutes;
-    let candidateSlots = findFreeSlots(input.range, occupied).map((slot) => ({
-      startsAt: task.earliestStartAt && task.earliestStartAt > slot.startsAt ? task.earliestStartAt : slot.startsAt,
-      endsAt: task.deadlineAt && task.deadlineAt < slot.endsAt ? task.deadlineAt : slot.endsAt,
-    })).filter((slot) => slot.endsAt > slot.startsAt);
+    const candidateSlots = availableSlots(task);
 
     if (!task.splittable) {
+      if (remaining > maximumFocusMinutes) {
+        unscheduled.push({ taskId: task.id, title: task.title, remainingMinutes: remaining, reason: "EXCEEDS_FOCUS_LIMIT" });
+        continue;
+      }
       const slot = candidateSlots.find((candidate) => durationMinutes(candidate) >= remaining);
       if (!slot) {
         unscheduled.push({ taskId: task.id, title: task.title, remainingMinutes: remaining, reason: "NO_CONTIGUOUS_SLOT" });
@@ -103,18 +117,24 @@ export function scheduleWeek(input: SchedulerInput): SchedulerResult {
       continue;
     }
 
-    const minimumChunk = Math.max(5, task.minimumChunkMinutes ?? 30);
-    for (const slot of candidateSlots) {
-      if (remaining <= 0) break;
-      const available = durationMinutes(slot);
-      if (available < minimumChunk && remaining > available) continue;
-      const chunk = Math.min(available, remaining);
-      if (chunk < minimumChunk && remaining > minimumChunk) continue;
+    const minimumChunk = Math.min(maximumFocusMinutes, Math.max(5, task.minimumChunkMinutes ?? 30));
+    let safety = 0;
+    while (remaining > 0 && safety < 100) {
+      safety += 1;
+      const slot = availableSlots(task).find((candidate) => {
+        const available = Math.min(durationMinutes(candidate), maximumFocusMinutes);
+        return available >= minimumChunk || remaining <= available;
+      });
+      if (!slot) break;
+      const available = Math.min(durationMinutes(slot), maximumFocusMinutes);
+      let chunk = Math.min(available, remaining);
+      const remainder = remaining - chunk;
+      if (remainder > 0 && remainder < minimumChunk && chunk - (minimumChunk - remainder) >= minimumChunk) chunk -= minimumChunk - remainder;
+      if (chunk < minimumChunk && remaining > chunk) break;
       const placement = placeChunk(task, slot, chunk);
       placements.push(placement);
       occupied.push(reservePlacement(placement, task, placements.length, input.minimumBreakMinutes));
       remaining -= chunk;
-      candidateSlots = findFreeSlots(input.range, occupied);
     }
 
     if (remaining > 0) {

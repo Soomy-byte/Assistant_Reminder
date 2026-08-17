@@ -1,0 +1,19 @@
+ASSISTANT REMINDER v0.3.2
+
+Paket ini berisi proyek lengkap dengan UI bernuansa versi 2.0 dan branding Assistant Reminder.
+
+Untuk mengganti project lama:
+
+1. Hentikan server lama dengan Ctrl+C.
+2. Ekstrak ZIP.
+3. Salin file .env dari project lama ke folder Assistant_Reminder yang baru.
+4. Pastikan container PostgreSQL lama masih berjalan:
+   docker start weekly-assistant-postgres
+5. Jalankan:
+   npm.cmd install
+   npm.cmd run db:prisma:generate
+   npm.cmd run db:migrate
+   npm.cmd run dev
+6. Buka http://localhost:3000 lalu tekan Ctrl+F5.
+
+Nama database dan container lama sengaja dipertahankan agar akun serta data yang sudah ada tetap dapat digunakan.

@@ -1,53 +1,28 @@
-# AI Weekly Assistant — Architecture Baseline
+# Arsitektur v0.3.0
 
-## Runtime shape
+- Next.js modular monolith untuk UI dan API.
+- PostgreSQL sebagai sumber data utama.
+- Prisma sebagai data access layer.
+- Scheduler deterministik sebagai fungsi murni.
+- Browser service worker untuk aset statis dan reminder lokal.
+- Parser lokal atau OpenAI Responses API untuk Brain Dump.
 
-- Next.js + TypeScript web application.
-- Modular monolith for HTTP/API and domain logic.
-- PostgreSQL as the authoritative product database.
-- Prisma schema and migrations for database access.
-- Redis + BullMQ worker will own delayed notification jobs.
-- AI providers are accessed behind a server-side adapter.
+## Alur utama
 
-Source lokal Fase 1 memakai PostgreSQL untuk akun, sesi, token reset, pembatasan login, serta preferensi. Versi website online tetap menjadi demo UI sampai database managed dan adapter email dipilih.
+`Target → Tugas → Scheduler → Proposal → Konfirmasi → ScheduleBlock → Reminder`
 
-## Identity invariants
+Scheduler mempertimbangkan rutinitas, blok aktif, hari kerja, tidur, deadline, prioritas, fokus maksimum, jeda minimum, serta izin pemecahan tugas. Engine tidak menulis database. Konfirmasi proposal melakukan transaction dan PostgreSQL menjadi penjaga overlap terakhir.
 
-- Kata sandi di-hash dengan bcrypt cost 12 dan tidak pernah disimpan mentah.
-- Token sesi dan reset dibuat secara acak; hanya HMAC SHA-256 yang disimpan.
-- Cookie sesi memakai `HttpOnly`, `SameSite=Lax`, dan `Secure` di production.
-- Reset token hanya sekali pakai, kedaluwarsa dalam 30 menit, dan merotasi seluruh sesi pengguna.
-- Percobaan login dan reset yang berlebihan dibatasi dengan record PostgreSQL.
-- Semua query produk berikutnya wajib memakai `userId` dari sesi server, bukan input klien.
+## Waktu dan keamanan
 
-## Module boundaries
+- Instant disimpan sebagai UTC `timestamptz`.
+- Rutinitas disimpan sebagai aturan wall clock dengan zona IANA.
+- Rentang menggunakan bentuk setengah terbuka `[mulai, selesai)`.
+- Semua query domain mengambil `userId` dari sesi server.
+- Cookie sesi `HttpOnly` dan `SameSite=Lax`.
+- Mutasi memeriksa origin; proxy header hanya dipercaya ketika `TRUST_PROXY=true`.
+- Brain Dump dibatasi dan output divalidasi ulang.
 
-- `identity`: users, sessions, ownership checks.
-- `preferences`: timezone, active days, sleep, focus and reminder defaults.
-- `tasks`: task lifecycle and validation.
-- `routines`: recurrence definitions and occurrences.
-- `scheduling`: deterministic slot calculation and constraint checking.
-- `ai-extraction`: Brain Dump provider adapter, schema validation and review state.
-- `notifications`: subscription management and idempotent reminder jobs.
-- `audit`: security and material change events.
+## Reminder
 
-## Time invariants
-
-- Persist instants as PostgreSQL `timestamptz` in UTC.
-- Persist the user’s IANA timezone separately.
-- Treat local routines as wall-clock rules and materialize dated occurrences.
-- Use half-open ranges `[startsAt, endsAt)` so adjacent blocks do not overlap.
-- Revalidate conflicts in the service layer and PostgreSQL transaction.
-
-## Database invariant
-
-PostgreSQL must enforce non-overlap for `PLANNED` and `ACTIVE` schedule blocks per user with a GiST exclusion constraint after the Prisma base migration is generated.
-
-## Deployment stages
-
-1. UI and interaction baseline.
-2. Managed PostgreSQL connection and migrations.
-3. Identity and user-owned manual task flow.
-4. Scheduling engine integration.
-5. AI extraction adapter.
-6. Redis worker, Web Push and PWA hardening.
+Job disimpan di PostgreSQL dan dipolling browser setiap menit. Versi lokal tidak menjanjikan notifikasi ketika aplikasi tertutup. Deployment 24 jam memerlukan worker dan Web Push.

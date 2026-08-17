@@ -1,0 +1,2 @@
+import assert from "node:assert/strict"; import test from "node:test"; import { localExtraction } from "./extraction";
+test("local Brain Dump extracts duration priority and weekday", () => { const result = localExtraction("Penting: laporan 2 jam sebelum Jumat pukul 17.00", "Asia/Jakarta"); assert.equal(result.tasks[0].durationMinutes, 120); assert.equal(result.tasks[0].priority, "HIGH"); assert.match(result.tasks[0].deadlineLocal || "", /T17:00$/); });

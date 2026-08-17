@@ -1,0 +1,56 @@
+ASSISTANT REMINDER v0.4.0
+
+VERSI INI MENAMBAHKAN
+- Kalender Minggu interaktif: drag-and-drop pada desktop.
+- Dialog ubah tanggal, jam, durasi, dan reminder untuk desktop/HP.
+- Penolakan konflik dengan pesan yang mudah dipahami.
+- Jadwal dan job reminder diperbarui dalam satu transaksi.
+- Tampilan mobile, mode offline baca-saja, manifest, dan service worker.
+- Fondasi Web Push dengan Redis, BullMQ, retry, dan worker terpisah.
+
+MEMPERBARUI PROJECT LAMA
+1. Hentikan npm run dev dan worker dengan Ctrl+C.
+2. Ekstrak ZIP ini ke folder baru.
+3. Salin file .env lama ke folder baru.
+4. Buka folder baru di VS Code, lalu jalankan:
+
+   npm.cmd install
+   docker start weekly-assistant-postgres
+   docker compose up -d redis
+   npm.cmd run db:prisma:generate
+   npm.cmd run db:migrate
+   npm.cmd run test:unit
+   npm.cmd run dev
+
+   Jika Docker menjawab bahwa PostgreSQL sudah berjalan, itu normal.
+
+5. Buka http://localhost:3000 dan tekan Ctrl+F5.
+
+Container dan nama database PostgreSQL lama tetap dipertahankan agar akun serta
+jadwal versi sebelumnya tidak hilang. Nama tersebut adalah detail kompatibilitas
+internal; seluruh nama produk yang terlihat pengguna memakai Assistant Reminder.
+
+MENGAKTIFKAN WEB PUSH
+1. Jalankan satu kali:
+
+   npm.cmd run notifications:keys
+
+2. Salin tiga baris hasilnya ke .env. Ganti alamat email pada WEB_PUSH_SUBJECT.
+3. Pastikan Redis aktif:
+
+   docker compose up -d redis
+
+4. Buka terminal VS Code kedua dan jalankan:
+
+   npm.cmd run worker:notifications
+
+5. Biarkan terminal dev dan worker tetap hidup. Klik ikon lonceng di aplikasi.
+
+CATATAN HANDPHONE
+- Instalasi PWA dan Web Push di HP memerlukan alamat HTTPS.
+- http://localhost:3000 hanya menunjuk perangkat tempat browser dibuka.
+- Agar reminder tetap terkirim ketika laptop mati, deploy web, PostgreSQL, Redis,
+  dan worker ke layanan yang selalu aktif.
+- Web Push bersifat best effort; perangkat offline dapat menerima lebih lambat.
+
+Baca SETUP_WINDOWS_VSCODE.md dan docs/PROJECT_GUIDE.md untuk penjelasan lengkap.

@@ -72,6 +72,25 @@ enum NotificationJobStatus {
   FAILED
 }
 
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  CANCELLED
+}
+
+enum ProposalStatus {
+  DRAFT
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+}
+
+enum ProposalKind {
+  NEW_SCHEDULE
+  RESCHEDULE
+}
+
 model User {
   id                        String                     @id @default(uuid()) @db.Uuid
   email                     String                     @unique @db.VarChar(320)
@@ -85,6 +104,7 @@ model User {
   sessions                  Session[]
   passwordResetTokens       PasswordResetToken[]
   tasks                     Task[]
+  goals                     Goal[]
   routines                  Routine[]
   routineOccurrences        RoutineOccurrence[]
   scheduleBlocks            ScheduleBlock[]
@@ -93,6 +113,7 @@ model User {
   notificationSubscriptions NotificationSubscription[]
   notificationJobs          NotificationJob[]
   auditEvents               AuditEvent[]
+  scheduleProposals         ScheduleProposal[]
 }
 
 model Session {
@@ -152,6 +173,7 @@ model UserPreference {
 model Task {
   id                       String             @id @default(uuid()) @db.Uuid
   userId                   String             @db.Uuid
+  goalId                   String?            @db.Uuid
   title                    String             @db.VarChar(200)
   description              String?            @db.VarChar(5000)
   estimatedDurationMinutes Int
@@ -169,11 +191,31 @@ model Task {
   updatedAt                DateTime           @updatedAt @db.Timestamptz(3)
   deletedAt                DateTime?          @db.Timestamptz(3)
   user                     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal                     Goal?              @relation(fields: [goalId], references: [id], onDelete: SetNull)
   scheduleBlocks           ScheduleBlock[]
   extractionItems          AiExtractionItem[]
+  proposalItems            ScheduleProposalItem[]
 
   @@index([userId, status, deadlineAt])
   @@index([userId, createdAt])
+  @@index([goalId])
+}
+
+model Goal {
+  id          String     @id @default(uuid()) @db.Uuid
+  userId      String     @db.Uuid
+  title       String     @db.VarChar(200)
+  description String?    @db.VarChar(3000)
+  monthStart  DateTime   @db.Date
+  targetAt    DateTime?  @db.Timestamptz(3)
+  status      GoalStatus @default(ACTIVE)
+  progress    Int        @default(0)
+  createdAt   DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime   @updatedAt @db.Timestamptz(3)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+
+  @@index([userId, monthStart, status])
 }
 
 model Routine {
@@ -233,6 +275,7 @@ model ScheduleBlock {
   scheduleVersion       ScheduleVersion?      @relation(fields: [scheduleVersionId], references: [id], onDelete: SetNull)
   notificationJobs      NotificationJob[]
   versionItems          ScheduleVersionItem[]
+  proposalItems         ScheduleProposalItem[]
 
   @@index([userId, startsAt, endsAt])
   @@index([taskId])
@@ -245,11 +288,47 @@ model ScheduleVersion {
   rangeStart DateTime              @db.Timestamptz(3)
   rangeEnd   DateTime              @db.Timestamptz(3)
   createdAt  DateTime              @default(now()) @db.Timestamptz(3)
+  undoneAt   DateTime?             @db.Timestamptz(3)
   user       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   blocks     ScheduleBlock[]
   items      ScheduleVersionItem[]
 
   @@index([userId, createdAt])
+}
+
+model ScheduleProposal {
+  id          String                 @id @default(uuid()) @db.Uuid
+  userId      String                 @db.Uuid
+  kind        ProposalKind           @default(NEW_SCHEDULE)
+  status      ProposalStatus         @default(DRAFT)
+  rangeStart  DateTime               @db.Timestamptz(3)
+  rangeEnd    DateTime               @db.Timestamptz(3)
+  unscheduled Json
+  snapshot    Json?
+  expiresAt   DateTime               @db.Timestamptz(3)
+  createdAt   DateTime               @default(now()) @db.Timestamptz(3)
+  confirmedAt DateTime?              @db.Timestamptz(3)
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       ScheduleProposalItem[]
+
+  @@index([userId, status, createdAt])
+}
+
+model ScheduleProposalItem {
+  id              String           @id @default(uuid()) @db.Uuid
+  proposalId      String           @db.Uuid
+  taskId          String           @db.Uuid
+  scheduleBlockId String?          @db.Uuid
+  title           String           @db.VarChar(200)
+  startsAt        DateTime         @db.Timestamptz(3)
+  endsAt          DateTime         @db.Timestamptz(3)
+  durationMinutes Int
+  proposal        ScheduleProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  task            Task             @relation(fields: [taskId], references: [id], onDelete: Restrict)
+  scheduleBlock   ScheduleBlock?   @relation(fields: [scheduleBlockId], references: [id], onDelete: SetNull)
+
+  @@index([proposalId])
+  @@index([taskId])
 }
 
 model ScheduleVersionItem {

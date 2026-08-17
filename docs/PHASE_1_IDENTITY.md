@@ -2,7 +2,7 @@
 
 ## Status
 
-Fase 1 selesai pada source lokal versi `0.2.0`.
+Dokumen ini adalah catatan historis fase akun yang selesai pada `0.2.0`. Fitur perencanaan berikutnya tersedia pada `0.3.0`.
 
 ## Cakupan yang tersedia
 
@@ -23,15 +23,12 @@ Fase 1 selesai pada source lokal versi `0.2.0`.
 - Migration `0002_phase_1_identity` tersedia.
 - ESLint lulus.
 - Next.js production build lulus.
-- Sites artifact build lulus.
-- Sembilan unit test lulus.
-- Render test memastikan dashboard dialihkan ke login dan halaman login dapat dirender.
+- Unit test autentikasi tetap menjadi bagian dari rangkaian tes `0.3.0`.
 
 ## Batas fase
 
 - Pengiriman email production belum dipilih. Pada development, tautan reset ditampilkan setelah permintaan berhasil; pada production, API tidak membocorkan token dan menunggu adapter email.
-- CRUD tugas, rutinitas, Brain Dump AI, dan notifikasi berada pada fase berikutnya.
-- Versi website online tidak diperbarui dalam fase lokal ini.
+- CRUD tugas, rutinitas, Brain Dump, dan reminder kini tersedia pada `0.3.0`.
 
 ## Definition of Done
 

@@ -18,14 +18,14 @@ services:
       retries: 10
 
   redis:
-    image: redis:7-alpine
-    container_name: weekly-assistant-redis
+    image: redis:7.4-alpine
+    container_name: assistant-reminder-redis
     restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
     ports:
       - "6379:6379"
     volumes:
-      - weekly_redis_data:/data
-    command: redis-server --appendonly yes
+      - assistant_reminder_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -34,4 +34,4 @@ services:
 
 volumes:
   weekly_postgres_data:
-  weekly_redis_data:
+  assistant_reminder_redis_data:
