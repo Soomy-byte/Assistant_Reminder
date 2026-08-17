@@ -50,3 +50,6 @@ next-env.d.ts
 
 # legacy deployment adapter, not part of the Vercel source
 /appdeploy-version/
+
+.vercel
+.env*
