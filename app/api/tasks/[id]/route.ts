@@ -26,7 +26,7 @@ export async function PUT(request: Request, context: Context) {
         const block = await tx.scheduleBlock.create({ data: { userId: session.userId, taskId: id, title: input.title, startsAt: input.fixedStartAt, endsAt: new Date(input.fixedStartAt.getTime() + input.estimatedDurationMinutes * 60000), blockType: "TASK", flexibility: "FIXED", reminderOffsetMinutes: session.user.preference?.defaultReminderMinutes ?? 15, source: "MANUAL" } });
         const offset = block.reminderOffsetMinutes ?? 0; if (offset > 0) await tx.notificationJob.create({ data: { userId: session.userId, scheduleBlockId: block.id, idempotencyKey: `block:${block.id}:revision:1:offset:${offset}`, scheduledFor: new Date(block.startsAt.getTime() - offset * 60000) } });
       }
-      return updated;
+      return tx.task.findUniqueOrThrow({ where: { id: updated.id }, include: { goal: { select: { id: true, title: true } }, scheduleBlocks: { where: { status: { in: ["PLANNED", "ACTIVE"] } }, orderBy: { startsAt: "asc" } } } });
     });
     return NextResponse.json({ ok: true, task });
   } catch { return jsonError("Perubahan ditolak karena menyebabkan konflik jadwal.", 409); }

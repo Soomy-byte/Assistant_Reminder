@@ -20,6 +20,7 @@ export const taskInputSchema = z.object({
   if (value.deadlineAt && value.earliestStartAt && value.deadlineAt <= value.earliestStartAt) context.addIssue({ code: "custom", path: ["deadlineAt"], message: "Deadline harus setelah waktu mulai paling awal." });
   if (value.flexibility === "FIXED" && !value.fixedStartAt) context.addIssue({ code: "custom", path: ["fixedStartAt"], message: "Tugas tetap membutuhkan waktu mulai." });
   if (!value.splittable && value.minimumChunkMinutes) context.addIssue({ code: "custom", path: ["minimumChunkMinutes"], message: "Minimum bagian hanya berlaku untuk tugas yang boleh dipecah." });
+  if (value.splittable && value.minimumChunkMinutes && value.minimumChunkMinutes > value.estimatedDurationMinutes) context.addIssue({ code: "custom", path: ["minimumChunkMinutes"], message: "Durasi minimum setiap sesi tidak boleh melebihi total durasi tugas." });
 });
 
 export const taskStatusSchema = z.object({ status: z.enum(["UNSCHEDULED", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "MISSED", "CANCELLED"]) });

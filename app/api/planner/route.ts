@@ -7,5 +7,8 @@ export async function GET(request: Request) {
     prisma.scheduleBlock.findMany({ where: { userId: session.userId, status: { in: ["PLANNED", "ACTIVE", "COMPLETED", "MISSED"] }, startsAt: { lt: range.endsAt }, endsAt: { gt: range.startsAt } }, orderBy: { startsAt: "asc" } }),
     prisma.goal.findMany({ where: { userId: session.userId }, include: { tasks: { where: { deletedAt: null }, select: { id: true, title: true, status: true } } }, orderBy: { monthStart: "desc" } }),
   ]);
-  return NextResponse.json({ ok: true, planner: { timezone: session.user.preference?.timezone ?? "Asia/Jakarta", preferences: session.user.preference, tasks, routines, blocks, routineOccurrences: materializeRoutineRanges(routines, range), goals } });
+  return NextResponse.json(
+    { ok: true, planner: { timezone: session.user.preference?.timezone ?? "Asia/Jakarta", preferences: session.user.preference, tasks, routines, blocks, routineOccurrences: materializeRoutineRanges(routines, range), goals } },
+    { headers: { "cache-control": "private, no-store" } },
+  );
 }

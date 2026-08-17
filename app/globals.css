@@ -486,13 +486,17 @@ a { color: inherit; }
 .week-help { margin: -6px 0 16px; color: var(--muted); font-size: 10px; }
 .week-board > div { transition: border-color .18s ease, background .18s ease; }
 .week-board > div.today { border-color: rgba(39,108,83,.45); background: #f7fbf8; }
+.week-board > div.drag-over { border-color: var(--forest); background: #eaf5ee; box-shadow: inset 0 0 0 2px rgba(39,108,83,.12); }
 .week-event,
 .week-board p.week-event { display: grid; width: 100%; gap: 4px; margin: 0 0 8px; border: 1px solid transparent; border-radius: 10px; background: var(--forest-soft); padding: 10px; color: var(--ink); font: inherit; cursor: pointer; text-align: left; }
 .week-event:hover { border-color: rgba(39,108,83,.3); background: #dfeee6; }
 .week-event:active { cursor: grabbing; }
+.week-event.dragging { opacity: .45; }
 .week-event strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .week-event small { color: var(--forest-dark); font-size: 8px; }
 .week-event span { color: #7d8882; font-size: 7px; }
+.week-event span.drag-hint { display: flex; align-items: center; gap: 3px; }
+.week-event .drag-hint svg { width: 10px; height: 10px; }
 .week-event.routine,
 .week-board p.week-event.routine { border-left: 3px solid var(--amber); background: var(--amber-soft); cursor: default; }
 .week-event.routine small { color: #99601c; }
@@ -503,6 +507,22 @@ a { color: inherit; }
 .schedule-form-intro strong { font-size: 12px; }
 .schedule-form-intro small { color: var(--muted); font-size: 9px; }
 .schedule-form-help { margin: 0; border-left: 3px solid var(--amber); background: var(--amber-soft); padding: 10px 12px; color: #765225; font-size: 9px; line-height: 1.55; }
+.plan-kind-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.plan-kind-picker > button { display: flex; min-height: 76px; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 13px; background: #fbfcfa; padding: 12px; color: var(--ink); cursor: pointer; text-align: left; }
+.plan-kind-picker > button.active { border-color: var(--forest); background: var(--forest-soft); box-shadow: 0 0 0 2px rgba(39,108,83,.09); }
+.plan-kind-picker > button > svg { width: 20px; min-width: 20px; color: var(--forest); }
+.plan-kind-picker > button > span { display: grid; gap: 3px; }
+.plan-kind-picker strong { font-size: 11px; }
+.plan-kind-picker small { color: var(--muted); font-size: 8px; line-height: 1.35; }
+.planner-form .optional { color: var(--muted); font-size: 8px; font-weight: 500; }
+.planner-form .field-help { color: var(--muted); font-size: 8px; font-weight: 500; line-height: 1.45; }
+.planner-form label.check { align-items: flex-start; border: 1px solid var(--line); border-radius: 12px; background: #fbfcfa; padding: 11px 12px; }
+.planner-form label.check input { margin-top: 2px; }
+.planner-form label.check > span { display: grid; gap: 3px; }
+.planner-form label.check strong { color: var(--ink); font-size: 10px; }
+.planner-form label.check small { color: var(--muted); font-size: 8px; font-weight: 500; line-height: 1.45; }
+.field-note { display: flex; align-items: center; gap: 7px; margin: 0; border-left: 3px solid var(--forest); border-radius: 8px; background: var(--forest-soft); padding: 10px 12px; color: var(--forest-dark); font-size: 9px; line-height: 1.5; }
+.field-note svg { width: 15px; min-width: 15px; }
 .form-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .form-actions > button { min-height: 44px; justify-content: center; border: 1px solid var(--line); border-radius: 10px; background: white; padding: 9px 14px; color: var(--ink); cursor: pointer; font-weight: 700; }
 .form-actions > button.primary { border-color: var(--forest); background: var(--forest); color: white; }
@@ -572,6 +592,7 @@ a { color: inherit; }
   .week-event { min-height: 62px; padding: 12px; }
   .planner-modal-backdrop { align-items: end; padding: 0; }
   .planner-modal { width: 100%; max-height: 92vh; border-radius: 22px 22px 0 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
+  .plan-kind-picker { grid-template-columns: 1fr; }
   .form-actions { display: grid; grid-template-columns: 1fr 1fr; }
   .account-export { align-items: stretch; flex-direction: column; }
   .account-export .secondary-button, .danger-button { width: 100%; justify-content: center; }

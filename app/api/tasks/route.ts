@@ -26,7 +26,7 @@ export async function POST(request: Request) {
         if (offset > 0) await tx.notificationJob.create({ data: { userId: session.userId, scheduleBlockId: block.id, idempotencyKey: `block:${block.id}:revision:1:offset:${offset}`, scheduledFor: new Date(block.startsAt.getTime() - offset * 60000) } });
       }
       await tx.auditEvent.create({ data: { userId: session.userId, action: "task.created", entityType: "Task", entityId: created.id } });
-      return created;
+      return tx.task.findUniqueOrThrow({ where: { id: created.id }, include: { goal: { select: { id: true, title: true } }, scheduleBlocks: { where: { status: { in: ["PLANNED", "ACTIVE"] } }, orderBy: { startsAt: "asc" } } } });
     });
     return NextResponse.json({ ok: true, task }, { status: 201 });
   } catch { return jsonError("Tugas tidak dapat disimpan. Periksa kemungkinan benturan jadwal.", 409); }
