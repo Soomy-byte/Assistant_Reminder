@@ -1,0 +1,360 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  DRAFT
+  UNSCHEDULED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  MISSED
+  CANCELLED
+}
+
+enum Flexibility {
+  FIXED
+  FLEXIBLE
+}
+
+enum BlockType {
+  TASK
+  ROUTINE
+  BREAK
+  PERSONAL
+}
+
+enum BlockStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+  MISSED
+  CANCELLED
+}
+
+enum TaskSource {
+  MANUAL
+  AI_BRAIN_DUMP
+}
+
+enum BlockSource {
+  MANUAL
+  SCHEDULER
+  RESCHEDULE
+}
+
+enum BrainDumpStatus {
+  PENDING
+  PROCESSING
+  REVIEW
+  CONFIRMED
+  FAILED
+}
+
+enum NotificationJobStatus {
+  SCHEDULED
+  PROCESSING
+  SENT
+  CANCELLED
+  FAILED
+}
+
+model User {
+  id                        String                     @id @default(uuid()) @db.Uuid
+  email                     String                     @unique @db.VarChar(320)
+  displayName               String?                    @db.VarChar(120)
+  passwordHash              String?                    @db.VarChar(255)
+  emailVerifiedAt           DateTime?                  @db.Timestamptz(3)
+  createdAt                 DateTime                   @default(now()) @db.Timestamptz(3)
+  updatedAt                 DateTime                   @updatedAt @db.Timestamptz(3)
+  deletedAt                 DateTime?                  @db.Timestamptz(3)
+  preference                UserPreference?
+  sessions                  Session[]
+  passwordResetTokens       PasswordResetToken[]
+  tasks                     Task[]
+  routines                  Routine[]
+  routineOccurrences        RoutineOccurrence[]
+  scheduleBlocks            ScheduleBlock[]
+  scheduleVersions          ScheduleVersion[]
+  brainDumps                BrainDump[]
+  notificationSubscriptions NotificationSubscription[]
+  notificationJobs          NotificationJob[]
+  auditEvents               AuditEvent[]
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique @db.VarChar(255)
+  expiresAt DateTime @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique @db.VarChar(255)
+  expiresAt DateTime  @db.Timestamptz(3)
+  usedAt    DateTime? @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model AuthRateLimit {
+  keyHash         String    @id @db.VarChar(64)
+  action          String    @db.VarChar(40)
+  attempts        Int       @default(1)
+  windowStartedAt DateTime  @db.Timestamptz(3)
+  blockedUntil    DateTime? @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([action, updatedAt])
+}
+
+model UserPreference {
+  id                     String    @id @default(uuid()) @db.Uuid
+  userId                 String    @unique @db.Uuid
+  timezone               String    @default("Asia/Jakarta") @db.VarChar(64)
+  locale                 String    @default("id-ID") @db.VarChar(16)
+  weekStartsOn           Int       @default(1)
+  clockFormat            Int       @default(24)
+  activeDays             Int[]     @default([1, 2, 3, 4, 5])
+  sleepStartMinute       Int       @default(1320)
+  sleepEndMinute         Int       @default(360)
+  maximumFocusMinutes    Int       @default(120)
+  minimumBreakMinutes    Int       @default(15)
+  defaultReminderMinutes Int       @default(15)
+  productiveWindows      Json?
+  onboardingCompletedAt  DateTime? @db.Timestamptz(3)
+  createdAt              DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime  @updatedAt @db.Timestamptz(3)
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id                       String             @id @default(uuid()) @db.Uuid
+  userId                   String             @db.Uuid
+  title                    String             @db.VarChar(200)
+  description              String?            @db.VarChar(5000)
+  estimatedDurationMinutes Int
+  deadlineAt               DateTime?          @db.Timestamptz(3)
+  earliestStartAt          DateTime?          @db.Timestamptz(3)
+  priority                 TaskPriority       @default(MEDIUM)
+  flexibility              Flexibility        @default(FLEXIBLE)
+  splittable               Boolean            @default(false)
+  minimumChunkMinutes      Int?
+  preferredWindows         Json?
+  status                   TaskStatus         @default(UNSCHEDULED)
+  source                   TaskSource         @default(MANUAL)
+  aiConfidence             Json?
+  createdAt                DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt                DateTime           @updatedAt @db.Timestamptz(3)
+  deletedAt                DateTime?          @db.Timestamptz(3)
+  user                     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scheduleBlocks           ScheduleBlock[]
+  extractionItems          AiExtractionItem[]
+
+  @@index([userId, status, deadlineAt])
+  @@index([userId, createdAt])
+}
+
+model Routine {
+  id          String              @id @default(uuid()) @db.Uuid
+  userId      String              @db.Uuid
+  title       String              @db.VarChar(200)
+  timezone    String              @db.VarChar(64)
+  recurrence  Json
+  startMinute Int
+  endMinute   Int
+  flexibility Flexibility         @default(FIXED)
+  active      Boolean             @default(true)
+  createdAt   DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime            @updatedAt @db.Timestamptz(3)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  occurrences RoutineOccurrence[]
+
+  @@index([userId, active])
+}
+
+model RoutineOccurrence {
+  id             String         @id @default(uuid()) @db.Uuid
+  userId         String         @db.Uuid
+  routineId      String         @db.Uuid
+  startsAt       DateTime       @db.Timestamptz(3)
+  endsAt         DateTime       @db.Timestamptz(3)
+  sourceTimezone String         @db.VarChar(64)
+  createdAt      DateTime       @default(now()) @db.Timestamptz(3)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  routine        Routine        @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  scheduleBlock  ScheduleBlock?
+
+  @@unique([routineId, startsAt])
+  @@index([userId, startsAt, endsAt])
+}
+
+model ScheduleBlock {
+  id                    String                @id @default(uuid()) @db.Uuid
+  userId                String                @db.Uuid
+  taskId                String?               @db.Uuid
+  routineOccurrenceId   String?               @unique @db.Uuid
+  scheduleVersionId     String?               @db.Uuid
+  title                 String                @db.VarChar(200)
+  startsAt              DateTime              @db.Timestamptz(3)
+  endsAt                DateTime              @db.Timestamptz(3)
+  blockType             BlockType
+  flexibility           Flexibility           @default(FLEXIBLE)
+  status                BlockStatus           @default(PLANNED)
+  reminderOffsetMinutes Int?
+  source                BlockSource           @default(MANUAL)
+  revision              Int                   @default(1)
+  createdAt             DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime              @updatedAt @db.Timestamptz(3)
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task                  Task?                 @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  routineOccurrence     RoutineOccurrence?    @relation(fields: [routineOccurrenceId], references: [id], onDelete: SetNull)
+  scheduleVersion       ScheduleVersion?      @relation(fields: [scheduleVersionId], references: [id], onDelete: SetNull)
+  notificationJobs      NotificationJob[]
+  versionItems          ScheduleVersionItem[]
+
+  @@index([userId, startsAt, endsAt])
+  @@index([taskId])
+}
+
+model ScheduleVersion {
+  id         String                @id @default(uuid()) @db.Uuid
+  userId     String                @db.Uuid
+  reason     String                @db.VarChar(120)
+  rangeStart DateTime              @db.Timestamptz(3)
+  rangeEnd   DateTime              @db.Timestamptz(3)
+  createdAt  DateTime              @default(now()) @db.Timestamptz(3)
+  user       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blocks     ScheduleBlock[]
+  items      ScheduleVersionItem[]
+
+  @@index([userId, createdAt])
+}
+
+model ScheduleVersionItem {
+  id                String          @id @default(uuid()) @db.Uuid
+  scheduleVersionId String          @db.Uuid
+  scheduleBlockId   String?         @db.Uuid
+  snapshot          Json
+  scheduleVersion   ScheduleVersion @relation(fields: [scheduleVersionId], references: [id], onDelete: Cascade)
+  scheduleBlock     ScheduleBlock?  @relation(fields: [scheduleBlockId], references: [id], onDelete: SetNull)
+
+  @@index([scheduleVersionId])
+}
+
+model BrainDump {
+  id             String          @id @default(uuid()) @db.Uuid
+  userId         String          @db.Uuid
+  rawText        String          @db.VarChar(10000)
+  status         BrainDumpStatus @default(PENDING)
+  idempotencyKey String          @db.VarChar(120)
+  errorCode      String?         @db.VarChar(80)
+  createdAt      DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime        @updatedAt @db.Timestamptz(3)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  extractions    AiExtraction[]
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, createdAt])
+}
+
+model AiExtraction {
+  id            String             @id @default(uuid()) @db.Uuid
+  brainDumpId   String             @db.Uuid
+  provider      String             @db.VarChar(80)
+  modelAlias    String             @db.VarChar(80)
+  schemaVersion String             @db.VarChar(32)
+  output        Json
+  latencyMs     Int?
+  inputTokens   Int?
+  outputTokens  Int?
+  createdAt     DateTime           @default(now()) @db.Timestamptz(3)
+  brainDump     BrainDump          @relation(fields: [brainDumpId], references: [id], onDelete: Cascade)
+  items         AiExtractionItem[]
+
+  @@index([brainDumpId, createdAt])
+}
+
+model AiExtractionItem {
+  id           String       @id @default(uuid()) @db.Uuid
+  extractionId String       @db.Uuid
+  taskId       String?      @db.Uuid
+  position     Int
+  candidate    Json
+  confidence   Json?
+  needsReview  Boolean      @default(true)
+  extraction   AiExtraction @relation(fields: [extractionId], references: [id], onDelete: Cascade)
+  task         Task?        @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@unique([extractionId, position])
+}
+
+model NotificationSubscription {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  endpoint   String   @unique @db.Text
+  p256dh     String   @db.Text
+  auth       String   @db.Text
+  userAgent  String?  @db.VarChar(500)
+  active     Boolean  @default(true)
+  lastSeenAt DateTime @default(now()) @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, active])
+}
+
+model NotificationJob {
+  id              String                @id @default(uuid()) @db.Uuid
+  userId          String                @db.Uuid
+  scheduleBlockId String                @db.Uuid
+  idempotencyKey  String                @unique @db.VarChar(160)
+  scheduledFor    DateTime              @db.Timestamptz(3)
+  status          NotificationJobStatus @default(SCHEDULED)
+  attempts        Int                   @default(0)
+  lastErrorCode   String?               @db.VarChar(80)
+  sentAt          DateTime?             @db.Timestamptz(3)
+  createdAt       DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime              @updatedAt @db.Timestamptz(3)
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scheduleBlock   ScheduleBlock         @relation(fields: [scheduleBlockId], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduledFor])
+  @@index([userId, scheduledFor])
+}
+
+model AuditEvent {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String?  @db.Uuid
+  action        String   @db.VarChar(100)
+  entityType    String?  @db.VarChar(80)
+  entityId      String?  @db.Uuid
+  correlationId String?  @db.VarChar(100)
+  metadata      Json?
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([correlationId])
+}

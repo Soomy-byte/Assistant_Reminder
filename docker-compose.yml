@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: weekly-assistant-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: weekly_user
+      POSTGRES_PASSWORD: weekly_password
+      POSTGRES_DB: weekly_assistant
+    ports:
+      - "5432:5432"
+    volumes:
+      - weekly_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U weekly_user -d weekly_assistant"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: weekly-assistant-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - weekly_redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  weekly_postgres_data:
+  weekly_redis_data:
