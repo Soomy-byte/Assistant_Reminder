@@ -136,7 +136,10 @@ npm.cmd run worker:notifications
 - `npm.cmd run typecheck`: memastikan bentuk data TypeScript konsisten.
 - `npm.cmd run lint`: mencari pola kode bermasalah.
 - `npm.cmd run build`: membuktikan bundel production dapat dibuat.
+- `npm.cmd run test:e2e`: membuat lingkungan tes terpisah lalu menjalankan browser desktop dan HP secara otomatis.
 - Uji manual: buat tugas, konfirmasi proposal, pindahkan blok, coba konflik, ubah reminder, offline-kan browser, lalu aktifkan kembali.
+
+Endpoint `/api/health` menguji apakah Next.js hidup. Endpoint `/api/health/ready` menguji apakah PostgreSQL dan Redis benar-benar dapat dijangkau. Pemisahan ini mencegah halaman terlihat hidup padahal data tidak dapat dimuat.
 
 ## 11. Batas yang perlu diketahui
 
@@ -144,4 +147,7 @@ npm.cmd run worker:notifications
 - Worker harus selalu hidup untuk push latar belakang.
 - Redis menyimpan antrean, sedangkan PostgreSQL tetap menjadi sumber kebenaran.
 - Offline V1 hanya baca-saja.
-- Pengiriman email reset password, observability production, backup terkelola, E2E lintas browser, dan deployment masih menjadi tahap hardening berikutnya.
+- Pengiriman email reset password pada source lokal, observability lanjutan, backup terkelola, dan pengujian perangkat fisik tetap menjadi hardening berikutnya.
+- Source lokal sudah siap diuji dan disimpan di GitHub, tetapi deployment Vercel masih memerlukan PostgreSQL/Redis terkelola, runtime worker, secret production, backup, dan monitoring.
+
+Penjelasan lengkap pengujian serta deployment tersedia di `docs/TESTING_AND_DEPLOYMENT.md`.

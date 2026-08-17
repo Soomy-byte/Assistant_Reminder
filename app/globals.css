@@ -520,6 +520,17 @@ a { color: inherit; }
 .planner-topbar button:disabled,
 .planner-header button:disabled { cursor: not-allowed; opacity: .5; }
 
+.account-section { margin-top: 18px; }
+.account-export { display: flex; align-items: center; justify-content: space-between; gap: 20px; border: 1px solid var(--line); border-radius: 14px; background: #fafbf9; padding: 16px; }
+.account-export > div { display: grid; gap: 5px; }
+.account-export p, .danger-zone p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.account-export .secondary-button { display: inline-flex; min-width: max-content; align-items: center; gap: 7px; }
+.danger-zone { margin-top: 14px; border: 1px solid #ebc9c4; border-radius: 14px; background: #fffafa; padding: 14px 16px; }
+.danger-zone summary { display: flex; align-items: center; gap: 8px; color: #9d3f36; cursor: pointer; font-weight: 700; }
+.danger-zone form { display: grid; gap: 14px; margin-top: 16px; }
+.danger-button { width: max-content; border: 0; border-radius: 10px; background: #a43f35; padding: 11px 15px; color: white; cursor: pointer; font-weight: 700; }
+.danger-button:disabled { cursor: not-allowed; opacity: .5; }
+
 @media (max-width: 1080px) {
   .planner-summary-grid { grid-template-columns: 1fr 1fr; }
   .planner-summary-grid > article:first-child { grid-column: 1 / -1; }
@@ -562,4 +573,6 @@ a { color: inherit; }
   .planner-modal-backdrop { align-items: end; padding: 0; }
   .planner-modal { width: 100%; max-height: 92vh; border-radius: 22px 22px 0 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
   .form-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .account-export { align-items: stretch; flex-direction: column; }
+  .account-export .secondary-button, .danger-button { width: 100%; justify-content: center; }
 }

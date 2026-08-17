@@ -49,7 +49,7 @@ Migration `0003_planner_mvp` meningkatkan database v0.2 tanpa menghapus akun lam
 ```powershell
 npm.cmd run test:unit
 npm.cmd run typecheck
-npm.cmd run lint:local
+npm.cmd run lint
 npm.cmd run build
 npm.cmd run dev
 ```
@@ -87,3 +87,45 @@ npm.cmd run worker:notifications
 Klik ikon lonceng di aplikasi untuk mendaftarkan browser. Pengujian di handphone memerlukan deployment HTTPS; alamat IP lokal melalui HTTP tidak memenuhi syarat keamanan Push API.
 
 Tekan `Ctrl+C` pada kedua terminal untuk menghentikan Next.js dan worker. Gunakan `docker compose stop` untuk menghentikan PostgreSQL serta Redis tanpa menghapus data.
+
+## 7. Pengujian browser otomatis
+
+Pasang Chromium tes satu kali:
+
+```powershell
+npx.cmd playwright install chromium
+```
+
+Jalankan E2E. Perintah ini memakai database/Redis tes terpisah dan tidak mengubah data utamamu:
+
+```powershell
+npm.cmd run test:e2e
+```
+
+Untuk membersihkan container tes:
+
+```powershell
+npm.cmd run test:e2e:clean
+```
+
+## 8. GitHub dan deployment
+
+Repository GitHub menyimpan source serta riwayat perubahan, tetapi tidak menjalankan aplikasi. Gunakan alur berikut setelah mengubah kode:
+
+```powershell
+git status
+git diff
+git add .
+git commit -m "jelaskan perubahan"
+git push
+```
+
+Deployment Vercel dilakukan setelah quality gate lulus dan layanan PostgreSQL, Redis/queue, worker reminder, environment variable, backup, serta monitoring production sudah disiapkan. Baca `docs/TESTING_AND_DEPLOYMENT.md` sebelum mengimpor repository ke Vercel.
+
+## 9. Membersihkan artefak lokal
+
+```powershell
+npm.cmd run clean
+```
+
+Perintah ini menghapus cache, hasil build, generated Prisma Client, dan laporan tes yang dapat dibuat ulang. Source code, `.env`, dependency `node_modules`, serta data volume Docker tidak dihapus.

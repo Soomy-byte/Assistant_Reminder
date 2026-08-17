@@ -1,6 +1,6 @@
 {
   "name": "assistant-reminder",
-  "version": "0.4.0",
+  "version": "0.5.1",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
@@ -8,20 +8,24 @@
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "next dev",
-    "dev:local": "next dev",
     "build": "next build",
-    "build:local": "next build",
     "start": "next start",
+    "clean": "node scripts/clean.mjs",
     "test": "npm run test:unit && npm run typecheck && npm run lint && npm run build",
     "test:unit": "node --import tsx --test lib/**/*.test.ts",
+    "test:e2e": "node scripts/prepare-e2e.mjs && playwright test",
+    "test:e2e:ci": "playwright test",
+    "test:e2e:ui": "node scripts/prepare-e2e.mjs && playwright test --ui",
+    "test:e2e:clean": "docker compose -f docker-compose.test.yml down -v",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "lint:local": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:prisma:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "notifications:keys": "node --import tsx scripts/generate-vapid-keys.ts",
-    "worker:notifications": "node --env-file=.env --import tsx worker/notifications.ts"
+    "worker:notifications": "node --env-file=.env --import tsx worker/notifications.ts",
+    "worker:notifications:test": "node --env-file=.env.test --import tsx worker/notifications.ts",
+    "dev:e2e": "node scripts/e2e-server.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",
@@ -36,6 +40,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Check, ChevronLeft, Clock3, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
+import { AccountActions } from "@/components/profile/account-actions";
 
 type ProfileState = {
   email: string;
@@ -161,6 +162,7 @@ export function ProfileForm({ mode }: { mode: "onboarding" | "settings" }) {
             <button className="primary-button" disabled={pending}>{pending ? "Menyimpan…" : mode === "onboarding" ? "Simpan dan buka dashboard" : "Simpan perubahan"}</button>
           </div>
         </form>
+        {mode === "settings" && <AccountActions />}
       </div>
     </main>
   );

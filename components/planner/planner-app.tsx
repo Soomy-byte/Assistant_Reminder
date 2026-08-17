@@ -2,7 +2,7 @@
 
 import { Bell, BrainCircuit, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Circle, ClipboardList, Clock3, LogOut, Pencil, Plus, RefreshCcw, Repeat2, RotateCcw, Settings, Sparkles, Target, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 type View = "today" | "week" | "month" | "tasks" | "routines" | "goals";
 type Block = { id: string; taskId: string | null; title: string; startsAt: string; endsAt: string; status: string; flexibility: string; revision: number; reminderOffsetMinutes: number | null };
@@ -120,4 +120,46 @@ function Panel({ title, action, children }: { title: string; action?: React.Reac
 function Cards({ children }: { children: React.ReactNode }) { return <div className="planner-cards">{children}</div>; }
 function Progress({ value }: { value: number }) { return <div className="planner-progress"><span style={{ width: `${value}%` }} /></div>; }
 function EmptyState({ icon, title, description, action, compact = false }: { icon: React.ReactNode; title: string; description: string; action?: React.ReactNode; compact?: boolean }) { return <div className={`planner-empty ${compact ? "compact" : ""}`}><span>{icon}</span><strong>{title}</strong><p>{description}</p>{action}</div>; }
-function Modal({ title, close, children }: { title: string; close: () => void; children: React.ReactNode }) { return <div className="planner-modal-backdrop"><section className="planner-modal" role="dialog" aria-modal="true"><header><h2>{title}</h2><button onClick={close}><X /></button></header>{children}</section></div>; }
+function Modal({ title, close, children }: { title: string; close: () => void; children: React.ReactNode }) {
+  const titleId = useId();
+  const dialogRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const frame = window.requestAnimationFrame(() => {
+      dialogRef.current?.querySelector<HTMLElement>("button, input, select, textarea, [tabindex]:not([tabindex='-1'])")?.focus();
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      previouslyFocused?.focus();
+    };
+  }, []);
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      close();
+      return;
+    }
+    if (event.key !== "Tab") return;
+
+    const focusable = Array.from(
+      event.currentTarget.querySelectorAll<HTMLElement>(
+        "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex='-1'])",
+      ),
+    );
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  return <div className="planner-modal-backdrop"><section ref={dialogRef} className="planner-modal" role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={handleKeyDown}><header><h2 id={titleId}>{title}</h2><button type="button" aria-label={`Tutup dialog ${title}`} onClick={close}><X /></button></header>{children}</section></div>;
+}

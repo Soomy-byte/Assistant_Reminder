@@ -1,0 +1,56 @@
+ASSISTANT REMINDER v0.5.0
+
+APLIKASI PUBLIK
+https://assistant-reminder-1krghw.v2.appdeploy.ai/
+
+YANG BARU
+- Health/readiness check untuk Next.js, PostgreSQL, dan Redis.
+- E2E Playwright desktop/mobile serta pemeriksaan aksesibilitas Axe.
+- Lingkungan database tes terpisah dari data pengembangan.
+- Header keamanan, dialog keyboard-friendly, ekspor data, dan hapus akun.
+- Versi publik AppDeploy dengan auth, database, notifikasi, cron, dan QA terkelola.
+
+MEMPERBARUI SOURCE LOKAL
+1. Hentikan npm run dev dan worker dengan Ctrl+C.
+2. Ekstrak ZIP v0.5 ke folder baru.
+3. Salin .env dari folder lama ke folder baru.
+4. Buka folder baru di VS Code dan jalankan:
+
+   npm.cmd install
+   docker compose up -d postgres redis
+   npm.cmd run db:prisma:generate
+   npm.cmd run db:migrate
+   npm.cmd run test:unit
+   npm.cmd run typecheck
+   npm.cmd run lint
+   npm.cmd run build
+   npm.cmd run dev
+
+5. Buka http://localhost:3000 dan tekan Ctrl+F5.
+
+MENGUJI BROWSER OTOMATIS
+1. Pasang browser tes satu kali:
+
+   npx.cmd playwright install chromium
+
+2. Pastikan Docker Desktop hidup, lalu jalankan:
+
+   npm.cmd run test:e2e
+
+Tes memakai PostgreSQL port 5433, Redis port 6380, dan Next.js port 3100.
+Data utama di port 5432 tidak disentuh.
+
+MENGUJI KESEHATAN SERVER
+- http://localhost:3000/api/health menunjukkan proses web hidup.
+- http://localhost:3000/api/health/ready menunjukkan database dan Redis siap.
+
+NOTIFIKASI HANDPHONE
+- Versi publik sudah HTTPS dan menggunakan notification service terkelola.
+- Masuk, buka Pengaturan, lalu tekan Aktifkan dan uji notifikasi.
+- Di iPhone, pasang ke Home Screen jika panduan browser memintanya.
+- Cron memeriksa reminder setiap 5 menit; Web Push tetap bersifat best effort.
+
+BACA PENJELASAN
+- docs/PROJECT_GUIDE.md: arsitektur dan cara kerja fitur.
+- docs/TESTING_AND_DEPLOYMENT.md: arti setiap teknologi, cara tes, dan deployment.
+- SETUP_WINDOWS_VSCODE.md: instalasi lokal langkah demi langkah.

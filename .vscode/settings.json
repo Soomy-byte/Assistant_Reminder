@@ -4,5 +4,15 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "files.exclude": {
+    "**/.next": true,
+    "**/.runtime-tmp": true,
+    "**/.sites-runtime": true,
+    "**/app/generated/prisma": true,
+    "**/node_modules": true,
+    "**/playwright-report": true,
+    "**/test-results": true,
+    "**/tsconfig.tsbuildinfo": true
+  }
 }

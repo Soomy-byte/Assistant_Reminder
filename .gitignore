@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/playwright-report
+/test-results
 
 # next.js
 /.next/
@@ -34,6 +36,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local runtime and build caches
+/.sites-runtime/
+*.tsbuildinfo
+
 # typescript
 next-env.d.ts
 /dist/
@@ -42,15 +48,5 @@ next-env.d.ts
 /app/generated/prisma/
 /.runtime-tmp/
 
-# AppDeploy adapter tidak digunakan untuk versi GitHub/Vercel
+# legacy deployment adapter, not part of the Vercel source
 /appdeploy-version/
-
-# hasil pengujian Playwright
-/playwright-report/
-/test-results/
-
-# temporary deployment files
-/.sites-runtime/
-
-# TypeScript build cache
-*.tsbuildinfo
